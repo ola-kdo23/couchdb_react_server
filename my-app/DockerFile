@@ -1,0 +1,15 @@
+FROM node:latest
+
+WORKDIR /Frontend
+
+COPY ./src ./Frontend/src
+
+COPY ./public ./Frontend/public
+
+COPY ./package.json /Frontend/
+
+COPY ./package-lock.json /Frontend/
+
+RUN npm install
+
+EXPOSE 8080

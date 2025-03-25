@@ -1,0 +1,39 @@
+services:
+  couchdb:
+    image: couchdb:3.4.2
+    container_name: couchdatabase
+    restart: unless-stopped
+    ports:
+      - "5984:5984"
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=password
+    volumes:
+    - ./couchdb:/opt/couchdb/data
+  server:
+    image: node:latest
+    container_name: backendserver
+    depends_on:
+      - couchdb
+    environment:
+      - COUCHDB_URL='http://admin:password@couchdb:5984'
+      - COUCHDB_DB='communicationsdb'
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/Backend
+    working_dir: /Backend 
+    command: [ "sh", "-c","npm install --silent && node server.js"]
+    stdin_open: true
+    tty: true
+  web:
+    build: ./my-app
+    container_name: react0
+    ports:
+    - "8080:8080"
+    volumes:
+    - ./my-app:/Frontend
+    stdin_open: true
+    tty: true 
+    command: ["npm", "start"]
+    
