@@ -1,14 +1,14 @@
 FROM node:latest
 
-WORKDIR /Frontend
+WORKDIR /frontend
 
-COPY ./src ./Frontend/src
+COPY ./src ./frontend/src
 
-COPY ./public ./Frontend/public
+COPY ./public ./frontend/public
 
-COPY ./package.json /Frontend/
+COPY ./package.json /frontend/
 
-COPY ./package-lock.json /Frontend/
+COPY ./package-lock.json /frontend/
 
 RUN npm install
 
