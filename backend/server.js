@@ -62,7 +62,7 @@ app.post('/postchannel', async (req,res)=>{
 //create our posts and request endpoints
 app.post('/postquestion', async(req,res)=>{
     //get the info from the request body and insert it into the database
-    const[parChannel, topic,question] = req.body;
+    const {parChannel, topic,question} = req.body;
     const type = 'question';
     const cur_date = new Date();
     const date = datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
@@ -71,7 +71,7 @@ app.post('/postquestion', async(req,res)=>{
         return res.status(400).json({error:'Invalid, need a topic and a question and must be attached to a channel'});
     }
     try{
-        const doc = await infoDB.insert({topic,question,type,date, parChannel});
+        const doc = await infoDB.insert({parChannel,topic,question,type,date});
         return res.status(200).json({success: true, id: doc.id});
     }catch(error){
         console.error("Whoops couldnt insert question into the database", error);
@@ -80,7 +80,7 @@ app.post('/postquestion', async(req,res)=>{
 
 });
 app.post('/postanswer',async(req,res)=>{
-    const[parentId, answer]=req.body;
+    const {parentId, answer} =req.body;
     const type='answer';
     const cur_date= new Date();
     const date= datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
@@ -139,16 +139,17 @@ app.get('/alldata', async (req,res)=>{
             return{
                 id: channel.id,
                 topic: channel.doc.topic,
+                date: channel.doc.date,
                 questions: myquestions.map(q=>({
                     id: q.id,
                     topic: q.doc.topic,
-                    data: q.doc.data,
+                    question: q.doc.question,
                     date: q.doc.date,
-                    answers: answers.filter(ans=> ans.doc.parentId=== q.id).map({
+                    answers: answers.filter(ans=> ans.doc.parentId=== q.id).map( ans=> ({
                         id: ans.id,
-                        answer: ans.answer,
-                        date: ans.date
-                    })
+                        answer: ans.doc.answer,
+                        date: ans.doc.date
+                    }))
                 }))
             }
         })
