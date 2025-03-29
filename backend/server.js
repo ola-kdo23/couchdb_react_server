@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const nano = require('nano');
 const datentime = require('date-and-time');
 const cors = require('cors');
+const multer = require('multer'); 
+const path = require("path")
 
 const app = express();  //instantiate the express app
 const PORT = 3000;
@@ -36,10 +38,24 @@ const couch = nano(COUCHDB_URL);
     }
 })();
 
+//setting up storage for the imgages using multer
+const storage = multer.diskStorage({  //<--this essentially gives control on where to store files on disk
+    destination: function(req,file,cb){
+        cb(null,'./my_images');
+    },
+    filename: function(req,file,cb){
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9); //taken from the npm mutler page: https://www.npmjs.com/package/multer
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)); //add the extension manually
+    }
+})
+
+const upload = multer({ storage: storage })
+app.use('my_images',express.static('my_images'));
+
 //get database to perform operations on
 const infoDB = couch.use(COUCHDB_DB);
-
-app.post('/postchannel', async (req,res)=>{
+ 
+app.post('/postchannel', async (req,res)=>{  
     //so the name of a channel 
     const topic = req.body.topic;
     const type = 'channel';
@@ -60,18 +76,21 @@ app.post('/postchannel', async (req,res)=>{
 })
 
 //create our posts and request endpoints
-app.post('/postquestion', async(req,res)=>{
+app.post('/postquestion',upload.array('photos',3) ,async(req,res)=>{   //update q and a endpoints to take images
     //get the info from the request body and insert it into the database
     const {parChannel, topic,question} = req.body;
     const type = 'question';
     const cur_date = new Date();
     const date = datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
-
+    //get the images if any at all
+    const allImages=req.files.map(file=> `/my_images/${file.filename}`)
+    
     if(!parChannel || !question || !topic){
         return res.status(400).json({error:'Invalid, need a topic and a question and must be attached to a channel'});
     }
+
     try{
-        const doc = await infoDB.insert({parChannel,topic,question,type,date});
+        const doc = await infoDB.insert({parChannel,topic,question,type,date,allImages});
         return res.status(200).json({success: true, id: doc.id});
     }catch(error){
         console.error("Whoops couldnt insert question into the database", error);
@@ -79,17 +98,18 @@ app.post('/postquestion', async(req,res)=>{
 
 
 });
-app.post('/postanswer',async(req,res)=>{
+app.post('/postanswer',upload.array('photos',3),async(req,res)=>{
     const {parentId, answer} =req.body;
     const type='answer';
     const cur_date= new Date();
     const date= datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
+    const allImages=req.files.map(file=> `/my_images/${file.filename}`)
 
     if(!parentId|| !answer){
         return res.status(400).json({error: "Invalid, need a parent post and some data"})
     }
     try{
-        const doc= await infoDB.insert({parentId,answer,type,date});
+        const doc= await infoDB.insert({parentId,answer,type,date,allImages});
         return res.status(200).json({success: true, id: doc.id});
 
     }catch(error){
@@ -109,30 +129,6 @@ app.get('/alldata', async (req,res)=>{
         const questions = allDocs.rows.filter(question=> question.doc.type==='question');
         const answers = allDocs.rows.filter(answer=>answer.doc.type==='answer');
 
-        // const getResponses=(parentId)=>{  //recursively get the nested responses
-        //     answers.rows.filter(ans=> ans.doc.parentId===parentId).map(ans=>{
-        //         return{
-        //             id:ans.id,
-        //             parentId:ans.doc.parentId,
-        //             type:ans.doc.type,
-        //             data:ans.doc.data,
-        //             date:ans.doc.date,
-        //             replies: getResponses(ans.id)
-        //         }
-        //     })
-        // }
-
-        // const docs=questions.map(question => {
-        //     return{ //return an object that contains info of the question
-        //         id:question.id,
-        //         topic:question.doc.topic,
-        //         type:question.doc.type,
-        //         data:question.doc.data,
-        //         date:question.doc.date,
-        //         responses: getResponses( question.id)
-        //     }
-        // })
-
         //now we're introducing channels lets send all the channels with their respective questions
         const docs=channels.map(channel=>{
             const myquestions=questions.filter(question=>question.doc.parChannel===channel.id);
@@ -144,16 +140,17 @@ app.get('/alldata', async (req,res)=>{
                     id: q.id,
                     topic: q.doc.topic,
                     question: q.doc.question,
+                    allImages:q.doc.allImages||[],
                     date: q.doc.date,
                     answers: answers.filter(ans=> ans.doc.parentId=== q.id).map( ans=> ({
                         id: ans.id,
                         answer: ans.doc.answer,
+                        allImages: ans.doc.allImages||[],
                         date: ans.doc.date
                     }))
                 }))
             }
         })
-
 
         return res.status(200).json({docs}) //send that over
     

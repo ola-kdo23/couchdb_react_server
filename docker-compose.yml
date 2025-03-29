@@ -32,8 +32,7 @@ services:
     ports:
     - "8080:8080"
     volumes:
-    - ./my-app:/Frontend
+    - ./my-app:/frontend
     stdin_open: true
     tty: true 
     command: ["npm", "start"]
-    
