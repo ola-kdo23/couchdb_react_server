@@ -18,7 +18,7 @@ const AnswerForm= ({parentQ, onAddAnswer}) =>{
             formData.append("images", images[i]);
         }
     
-        axios.post('http://0.0.0.0:3000/postquestion', formData).then(res=>{
+        axios.post('http://0.0.0.0:3000/postanswer', formData).then(res=>{
             console.log(res.data);
             onAddAnswer();
         }).catch(error=>console.error(error));
@@ -33,7 +33,7 @@ const AnswerForm= ({parentQ, onAddAnswer}) =>{
                 <label>Images (optional):
                     <input type='file' accept="image/*" multiple onChange={handleImages}/>
                 </label>
-                <button type="submit">Add Answer</button>
+                <button className='Button' type="submit">Add Answer</button>
             </form>
         </div> 
 

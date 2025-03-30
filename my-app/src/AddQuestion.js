@@ -39,7 +39,7 @@ const QuestionForm= ({parChannel, onAddQuestion}) =>{
                 <label>Images (optional):
                     <input type='file' accept="image/*" multiple onChange={handleImages}/>
                 </label>
-                <button type="submit">Add Question</button>
+                <button className='Button' type="submit">Add Question</button>
             </form>
         </div> 
 

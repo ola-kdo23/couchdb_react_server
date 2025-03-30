@@ -17,13 +17,13 @@ const ChannelForm = ({ onAddChannel }) => {
   };
 
   return (
-    <div>
+    <div className="Channel-cont">
       <h2>Add Channel</h2>
       <label>
         Topic:
         <input type="text" value={topic} onChange={e => setTopic(e.target.value)} />
       </label>
-      <button onClick={addChannel}>Add Channel</button>
+      <button className='Button' onClick={addChannel}>Add Channel</button>
     </div>
   );
 };

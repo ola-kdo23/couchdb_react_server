@@ -15,8 +15,8 @@ function ShowChannels(){
     return(
         
         <div>
-            <p>Welcome to the channels page!</p>
-            <Link to='/Landing'> <button> Back</button> </Link>
+            <h1>Welcome to the channels page!</h1>
+            <Link to='/Landing'> <button className='Button' > Back</button> </Link>
             <ChannelForm onAddChannel={handleAddQuestion} />
             <AllChannels key={updateList}/> 
         </div>

@@ -38,7 +38,7 @@ const AllChannels= () => {
     
     const showAnswers=(answers)=>{
         return answers.map(ans=>(
-            <div key={ans.id} >
+            <div className='channel-answers' key={ans.id} >
                 <p>{ans.answer}</p>
                 {ans.allImages && ans.allImages.length > 0 && (
                     <div>
@@ -56,7 +56,7 @@ const AllChannels= () => {
     
     const showQuestions=(questions)=>{
         return questions.map(q=>(
-            <div key={q.id} >
+            <div className='channel-questions' key={q.id} >
                 <p>{q.topic}</p>
                 <p>{q.question}</p>
 
@@ -90,11 +90,11 @@ const AllChannels= () => {
             (chans.map(c=>(
                 <div key={c.id} className="channel-container">
                     <div className="channel-header">
-                        <h3>Discussion: {c.topic}</h3>
+                        <h3>{c.topic} Channel</h3>
                         <p><em>Created on: {c.date}</em></p>
                     </div>
                     <QuestionForm parChannel={c.id} onAddQuestion={handleQuestions}/>
-                    <div className="channel-posts">
+                    <div>
                         <h4>Questions:</h4>
                         {/*Okay create a way to show display the questions here */}
                         {c.questions.length > 0 ? (
