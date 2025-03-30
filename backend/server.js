@@ -19,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //set up couchdb variables
 const COUCHDB_URL = 'http://admin:password@couchdb:5984' || process.env.COUCHDB_URL;
 const COUCHDB_DB = 'communicationsdb' || process.env.COUCHDB_DB;
+const COUCHDB_DB2= 'communitydb'
 
 const couch = nano(COUCHDB_URL);
 
@@ -36,7 +37,25 @@ const couch = nano(COUCHDB_URL);
     }}catch(error){
         console.error("Something went wrong with database!", error);
     }
+
+    //if users database doesnt exist then create
+    try
+    {if(!dbList.includes(COUCHDB_DB2)){
+        //create it
+        await couch.db.create(COUCHDB_DB2);
+        console.log("Database for users is created");
+    }
+    else{
+        console.log("Database for users already exists!");
+    }}catch(error){
+        console.error("Something went wrong with the users database!", error);
+    }
+
 })();
+
+//get database to perform operations on
+const infoDB = couch.use(COUCHDB_DB);
+const userDB = couch.use(COUCHDB_DB2);
 
 //setting up storage for the imgages using multer
 const storage = multer.diskStorage({  //<--this essentially gives control on where to store files on disk
@@ -50,11 +69,12 @@ const storage = multer.diskStorage({  //<--this essentially gives control on whe
 })
 
 const upload = multer({ storage: storage })
-app.use('my_images',express.static('my_images'));
+app.use('/my_images',express.static('my_images'));
 
-//get database to perform operations on
-const infoDB = couch.use(COUCHDB_DB);
- 
+
+
+//-------------------------------------communications data base endpoints---------------------------------------------------
+
 app.post('/postchannel', async (req,res)=>{  
     //so the name of a channel 
     const topic = req.body.topic;
@@ -76,7 +96,7 @@ app.post('/postchannel', async (req,res)=>{
 })
 
 //create our posts and request endpoints
-app.post('/postquestion',upload.array('photos',3) ,async(req,res)=>{   //update q and a endpoints to take images
+app.post('/postquestion',upload.array('images',3) ,async(req,res)=>{   //update q and a endpoints to take images
     //get the info from the request body and insert it into the database
     const {parChannel, topic,question} = req.body;
     const type = 'question';
@@ -98,7 +118,7 @@ app.post('/postquestion',upload.array('photos',3) ,async(req,res)=>{   //update 
 
 
 });
-app.post('/postanswer',upload.array('photos',3),async(req,res)=>{
+app.post('/postanswer',upload.array('images',3),async(req,res)=>{
     const {parentId, answer} =req.body;
     const type='answer';
     const cur_date= new Date();
@@ -158,6 +178,36 @@ app.get('/alldata', async (req,res)=>{
         console.error("Whoops an error occured while fetching data", error);
     }
 });
+
+//-------------------------------------community data base endpoints---------------------------------------------------
+
+app.post('/appusers', async(req,res) =>{
+    const{username,password}=req.body; //just get their id and password
+    
+    if(!username||!password){
+        res.status(400).json({error:"Couldn't log in, need a username and password"})
+    }
+    //insert into the userdb
+    try{
+        const doc= await userDB.insert({username,password});
+        res.status(200).json({success: true, id: doc.id})
+    }catch(error){
+        console.log("whoops couldn't insert to database", error);
+    }
+
+})
+
+app.get('/allusers', async (req,res)=>{
+    try{
+        //okay get your docs
+        const allrows = await userDB.list({include_docs: true});
+        const userDocs=allrows.rows.map(row=>row.doc); //send as an array of users so its easy to check over users during login
+        return res.status(200).json({userDocs});
+    }catch(error){
+        console.error("Whoops couldnt get all the user documents",error);
+    }
+})
+
 
 //open the port
 app.listen(PORT,HOST,()=>{
