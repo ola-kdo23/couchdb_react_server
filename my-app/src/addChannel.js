@@ -3,12 +3,12 @@ import axios from 'axios';
 
 //what does adding a channel mean? we want it to be like a button or what?
 
-const ChannelForm = ({ onAddChannel }) => {
+const ChannelForm = ({ onAddChannel, author }) => {
   const [topic, setTopic] = useState('');
   //const [response, setResponse] = useState('');
 
   const addChannel = () => {
-    axios.post('http://0.0.0.0:3000/postchannel', { topic })
+    axios.post('http://0.0.0.0:3000/postchannel', { topic, author:author})
       .then(res => {
         console.log(res.data);
         onAddChannel();

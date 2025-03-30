@@ -2,7 +2,7 @@ import React,{useState} from "react";
 import axios from "axios";
 //try and make this one into a dialog
 
-const QuestionForm= ({parChannel, onAddQuestion}) =>{
+const QuestionForm= ({parChannel, onAddQuestion, author}) =>{
     const[topic,setTopic]=useState('');
     const[data,setBody]=useState('');
     const[images,setImage]=useState([]);
@@ -16,6 +16,7 @@ const QuestionForm= ({parChannel, onAddQuestion}) =>{
         formData.append("parChannel", parChannel);
         formData.append("topic", topic);
         formData.append("question", data);
+        formData.append("author",author)
         for (let i = 0; i < images.length; i++) {
             formData.append("images", images[i]);
         }

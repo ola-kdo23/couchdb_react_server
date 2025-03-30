@@ -2,7 +2,7 @@ import React,{ useState,useEffect} from "react";
 import axios from "axios";
 import {Button, Dialog, DialogContent, DialogTitle, TextField} from '@mui/material';
 
-const LoginDialog=({ open, handleClose})=>{
+const LoginDialog=({ open, handleClose, onLogin})=>{
     //store the user name and password
     const[username, setUser]=useState('');
     const[password,setPass]=useState('');
@@ -30,8 +30,9 @@ const LoginDialog=({ open, handleClose})=>{
      //that they dont exist in the db and should signup first
         const exist = userDocs.find((user)=> user.username===username && user.password===password)
         if(exist){
-            //log them in
-            handleCloseD()
+            //log them in, store their username and password
+            onLogin(username);
+            handleCloseD();
         }
         else{
             //return an error message

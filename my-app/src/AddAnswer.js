@@ -1,7 +1,7 @@
 import React,{useState} from "react";
 import axios from "axios";
 
-const AnswerForm= ({parentQ, onAddAnswer}) =>{
+const AnswerForm= ({parentQ, onAddAnswer, author}) =>{
     const[answer,setAnswer]=useState('');
     const[images,setImage]=useState([]);
     
@@ -14,6 +14,7 @@ const AnswerForm= ({parentQ, onAddAnswer}) =>{
         const formData = new FormData();
         formData.append("parentId", parentQ);
         formData.append("answer", answer);
+        formData.append("author",author);
         for (let i = 0; i < images.length; i++) {
             formData.append("images", images[i]);
         }

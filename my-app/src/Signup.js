@@ -1,12 +1,8 @@
-//okay the sign up screen adds the user to the databse
-//the login screen varifies that the user is a member
-
-
 import React,{ useState} from "react";
 import axios from "axios";
 import {Button, Dialog, DialogContent, DialogTitle, TextField} from '@mui/material';
 
-const SignupDialog=({onAddUser, open, handleClose})=>{
+const SignupDialog=({onAddUser, open, handleClose, onSignup})=>{
     //store the user name and password
     const[username, setUser]=useState('');
     const[password,setPass]=useState('');
@@ -17,17 +13,17 @@ const SignupDialog=({onAddUser, open, handleClose})=>{
         handleClose();
     }
 
-    
     const addUser=()=>{
         axios.post('http://0.0.0.0:3000/appusers',{username,password}).then(res=>{
         console.log(res.data);
         onAddUser();
+        onSignup(username);
         }).catch(error=> console.error(error));
     };
 
     return(
         <Dialog open={open} onClose={handleClose} >
-            <DialogTitle>LogIn</DialogTitle>
+            <DialogTitle>Signup</DialogTitle>
             <DialogContent>
                 <TextField
                     label="Username"

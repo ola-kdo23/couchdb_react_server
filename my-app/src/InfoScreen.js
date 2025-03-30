@@ -6,36 +6,57 @@ import LoginDialog from "./LogIn";
 
 function LandingPage() {
 
-  const [open, setOpen] = useState(false);
+  const [openL, setOpenL] = useState(false);
+  const [openS, setOpenS] = useState(false);
   const [updateList, setUpdateList] = useState(false);
+  const [curUser,setCurUser] = useState(null);
+  const [issue, setIssue] =useState('');
 
-  const handleOpen = () => {
-    setOpen(true); // Open the dialog
-  };
+  //the login dialog
+  const handleOpenL = () => { setOpenL(true); };
+  const handleCloseL = () => {setOpenL(false); };
+  const handleLogin=(curUsername)=>{ setCurUser(curUsername);};
+ 
+  //the signup dialog
+  const handleOpenS = () => {setOpenS(true);};
+  const handleCloseS = () => {setOpenS(false);};
+  const handleSignup=(curUsername)=>{setCurUser(curUsername);};
+ 
+  const handleAddUser = () => {setUpdateList(!updateList);};
 
-  const handleClose = () => {
-    setOpen(false); // Close the dialog
-  };
 
-  const handleAddUser = () => {
-    setUpdateList(!updateList); 
+//--------------need to fix these two---------------------
+  const handlenoLogin =()=>{
+    setIssue("whoops you need to login or create an account to access the channels page");
   };
-  
+  const handleissue=()=>{
+    if(!curUser){
+      handlenoLogin();
+    }
+  };
+  console.log(issue);
+//--------------------------------------------------------
 
   return (
       <div className="Landing">
-        <div className="Landing-bspace">
-          <Link to='/Channel'><button className="Landing-Button"> Channels </button></Link>
-        </div>
+        
         <div className="Signup-bspace">
-          <button onClick={handleOpen} className="Signup-button">Signup</button>
-          <SignupDialog onAddUser={handleAddUser} open={open} handleClose={handleClose}/>
+          <button onClick={handleOpenS} className="Signup-button">Signup</button>
+          <SignupDialog onAddUser={handleAddUser} open={openS} handleClose={handleCloseS} onSignup={handleSignup}/>
         </div>
+        
         <div className="Login-bspace">
-          <button onClick={handleOpen} className="Login-button">Login</button>
-          <LoginDialog open={open} handleClose={handleClose}/>
+          <button onClick={handleOpenL} className="Login-button">Login</button>
+          <LoginDialog open={openL} handleClose={handleCloseL} onLogin={handleLogin}/>
         </div>
+        
+        <div className="Landing-bspace">  {/*now button only works if the user is logged in */}
+          <Link to={`/Channel?user=${curUser}`}><button className="Landing-Button" disabled={!curUser} onClick={handleissue}> Channels </button></Link>
+        </div>
+        {issue && <p style={{ color: 'red' }}>{issue}</p>} {/*doesnt seem to be working right now! */}
+        
         <header className="Landing-header">
+          <h1>{curUser}</h1>
           <h1>PostThat</h1>
           <img src={message} className="Landing-logo" alt="randostring" />
           <p className="Landing-intro"> Ask your question, get the answer you need.</p>

@@ -77,7 +77,8 @@ app.use('/my_images',express.static('my_images'));
 
 app.post('/postchannel', async (req,res)=>{  
     //so the name of a channel 
-    const topic = req.body.topic;
+    const {topic,author} = req.body;
+    
     const type = 'channel';
     const cur_date = new Date();
     const date = datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
@@ -87,7 +88,7 @@ app.post('/postchannel', async (req,res)=>{
     }
     //otherwise try and add it to the database
     try{
-        const doc= await infoDB.insert({topic, type, date}); // it has a name, a type 'channel' and a date
+        const doc= await infoDB.insert({topic, author,type, date}); // it has a name, a type 'channel' and a date
         return res.status(200).json({success:true, id: doc.id});
     }catch(error){
         console.error("Oh no couldnt add the channel to the database", error);
@@ -98,7 +99,7 @@ app.post('/postchannel', async (req,res)=>{
 //create our posts and request endpoints
 app.post('/postquestion',upload.array('images',3) ,async(req,res)=>{   //update q and a endpoints to take images
     //get the info from the request body and insert it into the database
-    const {parChannel, topic,question} = req.body;
+    const {parChannel,topic,question,author} = req.body;
     const type = 'question';
     const cur_date = new Date();
     const date = datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
@@ -110,7 +111,7 @@ app.post('/postquestion',upload.array('images',3) ,async(req,res)=>{   //update 
     }
 
     try{
-        const doc = await infoDB.insert({parChannel,topic,question,type,date,allImages});
+        const doc = await infoDB.insert({parChannel,topic,question,type,date,allImages,author});
         return res.status(200).json({success: true, id: doc.id});
     }catch(error){
         console.error("Whoops couldnt insert question into the database", error);
@@ -119,7 +120,7 @@ app.post('/postquestion',upload.array('images',3) ,async(req,res)=>{   //update 
 
 });
 app.post('/postanswer',upload.array('images',3),async(req,res)=>{
-    const {parentId, answer} =req.body;
+    const {parentId, answer,author} =req.body;
     const type='answer';
     const cur_date= new Date();
     const date= datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
@@ -129,7 +130,7 @@ app.post('/postanswer',upload.array('images',3),async(req,res)=>{
         return res.status(400).json({error: "Invalid, need a parent post and some data"})
     }
     try{
-        const doc= await infoDB.insert({parentId,answer,type,date,allImages});
+        const doc= await infoDB.insert({parentId,answer,type,date,allImages,author});
         return res.status(200).json({success: true, id: doc.id});
 
     }catch(error){
@@ -156,14 +157,17 @@ app.get('/alldata', async (req,res)=>{
                 id: channel.id,
                 topic: channel.doc.topic,
                 date: channel.doc.date,
+                author: channel.doc.author,
                 questions: myquestions.map(q=>({
                     id: q.id,
+                    author: q.doc.author,
                     topic: q.doc.topic,
                     question: q.doc.question,
                     allImages:q.doc.allImages||[],
                     date: q.doc.date,
                     answers: answers.filter(ans=> ans.doc.parentId=== q.id).map( ans=> ({
                         id: ans.id,
+                        author: ans.doc.author,
                         answer: ans.doc.answer,
                         allImages: ans.doc.allImages||[],
                         date: ans.doc.date
@@ -183,7 +187,6 @@ app.get('/alldata', async (req,res)=>{
 
 app.post('/appusers', async(req,res) =>{
     const{username,password}=req.body; //just get their id and password
-    
     if(!username||!password){
         res.status(400).json({error:"Couldn't log in, need a username and password"})
     }
@@ -194,7 +197,6 @@ app.post('/appusers', async(req,res) =>{
     }catch(error){
         console.log("whoops couldn't insert to database", error);
     }
-
 })
 
 app.get('/allusers', async (req,res)=>{
@@ -207,7 +209,6 @@ app.get('/allusers', async (req,res)=>{
         console.error("Whoops couldnt get all the user documents",error);
     }
 })
-
 
 //open the port
 app.listen(PORT,HOST,()=>{

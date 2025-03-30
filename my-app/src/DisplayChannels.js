@@ -3,7 +3,7 @@ import axios from "axios";
 import QuestionForm from "./AddQuestion";
 import AnswerForm from "./AddAnswer";
 
-const AllChannels= () => {
+const AllChannels= ({author}) => {
 
     const[chans,setChannels]=useState([]);
 
@@ -40,6 +40,7 @@ const AllChannels= () => {
         return answers.map(ans=>(
             <div className='channel-answers' key={ans.id} >
                 <p>{ans.answer}</p>
+                <p>Answered by: {ans.author}</p>
                 {ans.allImages && ans.allImages.length > 0 && (
                     <div>
                     {ans.allImages.map((url, index) => (
@@ -59,7 +60,7 @@ const AllChannels= () => {
             <div className='channel-questions' key={q.id} >
                 <p>{q.topic}</p>
                 <p>{q.question}</p>
-
+                <p>Asked by: {q.author}</p>
                 {q.allImages && q.allImages.length > 0 && (
                     <div>
                     {q.allImages.map((url, index) => (
@@ -70,7 +71,7 @@ const AllChannels= () => {
                 <p><em>Posted at: {q.date}</em></p>
                 
                 {/* show the answer form for each question thats made and display all its answers*/}
-                <AnswerForm parentQ={q.id} onAddAnswer={handleAnswers}/>
+                <AnswerForm parentQ={q.id} onAddAnswer={handleAnswers} author={author}/>
                 {q.answers.length >0 ? (   
                     showAnswers(q.answers)
                 ):(
@@ -91,9 +92,9 @@ const AllChannels= () => {
                 <div key={c.id} className="channel-container">
                     <div className="channel-header">
                         <h3>{c.topic} Channel</h3>
-                        <p><em>Created on: {c.date}</em></p>
+                        <p><em>Created on: {c.date} by: {c.author}</em></p>
                     </div>
-                    <QuestionForm parChannel={c.id} onAddQuestion={handleQuestions}/>
+                    <QuestionForm parChannel={c.id} onAddQuestion={handleQuestions} author={author}/>
                     <div>
                         <h4>Questions:</h4>
                         {/*Okay create a way to show display the questions here */}
