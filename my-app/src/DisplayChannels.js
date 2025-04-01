@@ -2,11 +2,12 @@ import React,{ useState, useEffect} from "react";
 import axios from "axios";
 import QuestionForm from "./AddQuestion";
 import AnswerForm from "./AddAnswer";
-import { FaThumbsUp } from 'react-icons/fa';
+import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 
 const AllChannels= ({author, admin}) => {
 
     const[chans,setChannels]=useState([]);
+
 
     //set up channels and get all docs
     useEffect(() => {
@@ -70,11 +71,38 @@ const AllChannels= ({author, admin}) => {
         .catch(error => console.error("Error fetching data:", error))
     }
     
+    // Function to handle like and dislike actions
+    const handleLikeDislike = (id, type, increment) => {
+        axios.post(`http://0.0.0.0:3000/updateLikes/${id}`, {
+            type: type,
+            increment: increment
+        })
+        .then(res => {
+            // Update the UI with new like/dislike counts
+            axios.get('http://0.0.0.0:3000/alldata')
+                .then(res => {
+                    setChannels(res.data.docs || []);
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        })
+        .catch(error => console.error("Error updating like/dislike:", error));
+    };
+
     //show all the answers
     const showAnswers=(answers)=>{
         return answers.map(ans=>(
             <div className='channel-answers' key={ans.id} >
                 <p>{ans.answer}</p>
+                <div>
+                    <button onClick={() => handleLikeDislike(ans.id, 'answer', 1)}>
+                        <FaThumbsUp style={{ color: 'gray' }} />
+                    </button>
+                    <span>{ans.likes}</span>
+                    <button onClick={() => handleLikeDislike(ans.id, 'answer', -1)}>
+                        <FaThumbsDown style={{ color: 'gray' }} />
+                    </button>
+                    <span>{ans.dislikes}</span>
+                </div>  
                 <p>Answered by: {ans.author}</p>
                 {ans.allImages && ans.allImages.length > 0 && (
                     <div>
@@ -84,9 +112,7 @@ const AllChannels= ({author, admin}) => {
                     </div>
                 )}
                 <p><em>Answered at: {ans.date}</em>{admin === 'true'? <button className="Button" onClick={()=>handleAnswerDelete(ans.id)}>Delete Answer </button> : null}</p>
-                <button >
-                    <FaThumbsUp style={{ color: liked ? 'pink' : 'gray' }} />
-                </button>
+                
                 <AnswerForm parentQ={ans.id} onAddAnswer={handleAnswers} author={author}/> {/*allowing the answers to also have nested responses */}
                 {ans.replies.length >0 ? (   
                     showAnswers(ans.replies)
@@ -104,7 +130,17 @@ const AllChannels= ({author, admin}) => {
         return questions.map(q=>(
             <div className='channel-questions' key={q.id} >
                 <p>{q.topic}</p>
-                <p>{q.question}</p>
+                <p>{q.question}  </p>
+                <div>
+                    <button onClick={() => handleLikeDislike(q.id, 'question', 1)}>
+                        <FaThumbsUp style={{ color: 'gray' }} />
+                    </button>
+                    <span>{q.likes}</span>
+                    <button onClick={() => handleLikeDislike(q.id, 'question', -1)}>
+                        <FaThumbsDown style={{ color: 'gray' }} />
+                    </button>
+                    <span>{q.dislikes}</span>
+                </div>
                 <p>Asked by: {q.author}</p>
                 {q.allImages && q.allImages.length > 0 && (
                     <div>
