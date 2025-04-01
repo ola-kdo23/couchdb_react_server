@@ -125,7 +125,7 @@ app.post('/postanswer',upload.array('images',3),async(req,res)=>{
     const cur_date= new Date();
     const date= datentime.format(cur_date,"YY/MM/DD HH:mm:ss");
     const allImages=req.files.map(file=> `/my_images/${file.filename}`)
-
+    
     if(!parentId|| !answer){
         return res.status(400).json({error: "Invalid, need a parent post and some data"})
     }
@@ -139,6 +139,47 @@ app.post('/postanswer',upload.array('images',3),async(req,res)=>{
 
 });
 
+//add delete end points to all the posts, channels and answers
+app.delete('/deletechannel/:id', async (req,res)=>{
+    const {id}=req.params;
+    try{
+        //get the channel to be deleted
+        const channel = await infoDB.get(id)
+        await infoDB.destroy(id,channel._rev);
+        res.status(200).json({success: true, message: "deleted channel"})
+
+    }catch(error){
+        console.error("whoops could delete channel", error)
+    }
+})
+
+app.delete('/deletequestion/:id', async (req,res)=>{
+    const {id}=req.params;
+    try{
+        //get the question to be deleted
+        const question = await infoDB.get(id)
+        await infoDB.destroy(id,question._rev);
+        res.status(200).json({success: true, message: "deleted question"})
+
+    }catch(error){
+        console.error("whoops could delete question", error)
+    }
+})
+
+app.delete('/deleteanswer/:id', async (req,res)=>{
+    const {id}=req.params;
+    try{
+        //get the answer to be deleted
+        const answer = await infoDB.get(id)
+        await infoDB.destroy(id,answer._rev);
+        res.status(200).json({success: true, message: "deleted answer"})
+
+    }catch(error){
+        console.error("whoops could delete answer", error)
+    }
+})
+
+
 //create an all data endpoint to retreive all the data
 app.get('/alldata', async (req,res)=>{
     try{
@@ -150,6 +191,17 @@ app.get('/alldata', async (req,res)=>{
         const questions = allDocs.rows.filter(question=> question.doc.type==='question');
         const answers = allDocs.rows.filter(answer=>answer.doc.type==='answer');
 
+        const getAnswer=(parentid)=>{
+            return answers.filter(a=>a.doc.parentId===parentid).map(a=>({
+                id: a.id,
+                author: a.doc.author,
+                answer: a.doc.answer,
+                allImages: a.doc.allImages||[],
+                date: a.doc.date,
+                replies: getAnswer(a.id)
+
+            }))
+        }
         //now we're introducing channels lets send all the channels with their respective questions
         const docs=channels.map(channel=>{
             const myquestions=questions.filter(question=>question.doc.parChannel===channel.id);
@@ -170,7 +222,8 @@ app.get('/alldata', async (req,res)=>{
                         author: ans.doc.author,
                         answer: ans.doc.answer,
                         allImages: ans.doc.allImages||[],
-                        date: ans.doc.date
+                        date: ans.doc.date,
+                        replies: getAnswer(ans.id) //allow nested
                     }))
                 }))
             }

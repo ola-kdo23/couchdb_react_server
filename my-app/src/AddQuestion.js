@@ -24,6 +24,9 @@ const QuestionForm= ({parChannel, onAddQuestion, author}) =>{
         axios.post('http://0.0.0.0:3000/postquestion', formData).then(res=>{
             console.log(res.data);
             onAddQuestion();
+            setTopic('');
+            setBody('');
+            setImage([]);
         }).catch(error=>console.error(error));
     };
 

@@ -10,6 +10,7 @@ function ShowChannels(){
     const location = useLocation();
     const param=new URLSearchParams(location.search);
     const username = param.get("user") || "None" ;
+    const isadmin = param.get("admin")||"None";  //now we can use this to set up special button for the admin.
     
 
     const handleAddQuestion = () => {
@@ -20,10 +21,9 @@ function ShowChannels(){
         
         <div>
             <h1>Welcome to the channels page!</h1>
-            <h1>{username}</h1>
             <Link to='/Landing'> <button className='Button' > Back</button> </Link>
             <ChannelForm onAddChannel={handleAddQuestion} author={username} />
-            <AllChannels key={updateList} author={username}/> 
+            <AllChannels key={updateList} author={username} admin={isadmin}/> 
         </div>
         
         

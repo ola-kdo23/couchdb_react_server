@@ -22,6 +22,8 @@ const AnswerForm= ({parentQ, onAddAnswer, author}) =>{
         axios.post('http://0.0.0.0:3000/postanswer', formData).then(res=>{
             console.log(res.data);
             onAddAnswer();
+            setAnswer('');
+            setImage([]);
         }).catch(error=>console.error(error));
     };
 
@@ -36,6 +38,7 @@ const AnswerForm= ({parentQ, onAddAnswer, author}) =>{
                 </label>
                 <button className='Button' type="submit">Add Answer</button>
             </form>
+            <br/>
         </div> 
 
     )
