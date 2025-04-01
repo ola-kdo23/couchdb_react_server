@@ -2,6 +2,7 @@ import React,{ useState, useEffect} from "react";
 import axios from "axios";
 import QuestionForm from "./AddQuestion";
 import AnswerForm from "./AddAnswer";
+import { FaThumbsUp } from 'react-icons/fa';
 
 const AllChannels= ({author, admin}) => {
 
@@ -41,10 +42,9 @@ const AllChannels= ({author, admin}) => {
     const handleAnswerDelete =(answerid)=>{
         axios.delete(`http://0.0.0.0:3000/deleteanswer/${answerid}`)
         .then(res => {
-            // Re-fetch all data after deleting the question
             axios.get('http://0.0.0.0:3000/alldata')
                 .then(res => {
-                    setChannels(res.data.docs || []); // Update with the latest data
+                    setChannels(res.data.docs || []);
                 })
                 .catch(error => console.error("Error fetching data:", error));
         })
@@ -84,6 +84,9 @@ const AllChannels= ({author, admin}) => {
                     </div>
                 )}
                 <p><em>Answered at: {ans.date}</em>{admin === 'true'? <button className="Button" onClick={()=>handleAnswerDelete(ans.id)}>Delete Answer </button> : null}</p>
+                <button >
+                    <FaThumbsUp style={{ color: liked ? 'pink' : 'gray' }} />
+                </button>
                 <AnswerForm parentQ={ans.id} onAddAnswer={handleAnswers} author={author}/> {/*allowing the answers to also have nested responses */}
                 {ans.replies.length >0 ? (   
                     showAnswers(ans.replies)

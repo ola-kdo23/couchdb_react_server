@@ -108,3 +108,8 @@
   cursor: pointer;
   border-radius: 4px
 }
+
+.Delete-container{
+  text-align: left;
+  padding: 8px 5px;
+}
