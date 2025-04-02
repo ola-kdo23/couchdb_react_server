@@ -4,20 +4,16 @@ import QuestionForm from "./AddQuestion";
 import AnswerForm from "./AddAnswer";
 import { FaThumbsDown, FaThumbsUp } from 'react-icons/fa';
 
-const AllChannels= ({author, admin}) => {
+const AllChannels= ({author, admin, channels}) => {
 
-    const[chans,setChannels]=useState([]);
+    const[chans,setChannels]=useState(channels);
 
-
-    //set up channels and get all docs
     useEffect(() => {
-        axios.get('http://0.0.0.0:3000/alldata')
-            .then(res => {
-                // Ensure topics is always an array
-                setChannels(res.data.docs || []);
-            })
-            .catch(error => console.error("Error fetching data:", error));
-    }, []);
+        setChannels(channels)
+     }, [channels]);
+
+
+
 
     const handleChannelDelete =(channelid)=>{
         axios.delete(`http://0.0.0.0:3000/deletechannel/${channelid}`)
@@ -163,6 +159,8 @@ const AllChannels= ({author, admin}) => {
         ))
 
     }
+
+    
 
 
     return(

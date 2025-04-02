@@ -111,7 +111,7 @@ app.post('/postquestion',upload.array('images',3) ,async(req,res)=>{   //update 
     }
 
     try{
-        const doc = await infoDB.insert({parChannel,topic,question,type,date,allImages,author});
+        const doc = await infoDB.insert({parChannel,topic,question,type,date,allImages,author, likes:0, dislikes:0});
         return res.status(200).json({success: true, id: doc.id});
     }catch(error){
         console.error("Whoops couldnt insert question into the database", error);
@@ -130,7 +130,7 @@ app.post('/postanswer',upload.array('images',3),async(req,res)=>{
         return res.status(400).json({error: "Invalid, need a parent post and some data"})
     }
     try{
-        const doc= await infoDB.insert({parentId,answer,type,date,allImages,author});
+        const doc= await infoDB.insert({parentId,answer,type,date,allImages,author, likes:0, dislikes:0});
         return res.status(200).json({success: true, id: doc.id});
 
     }catch(error){
@@ -179,6 +179,39 @@ app.delete('/deleteanswer/:id', async (req,res)=>{
     }
 })
 
+// Route to update likes for a question or answer
+app.post('/updatelikes/:id', async (req, res) => {
+    const { id } = req.params;
+    const { type, increment } = req.body; 
+
+    try {
+        const doc = await infoDB.get(id);
+        let newLikes = doc.likes;
+        let newDislikes = doc.dislikes;
+
+        if (type === 'question' || type === 'answer') {
+            // Increment the like or dislike count
+            if (increment === 1) {
+                newLikes += 1;
+            } else if (increment === -1) {
+                newDislikes += 1;
+            }
+
+            // Update the document with new counts
+            await infoDB.insert({
+                ...doc,
+                likes: newLikes,
+                dislikes: newDislikes
+            });
+
+            res.status(200).json({ success: true, likes: newLikes, dislikes: newDislikes });
+        } else {
+            res.status(400).json({ error: "Invalid type, must be 'question' or 'answer'" });
+        }
+    } catch (error) {
+        console.error("Error updating like/dislike", error);
+    }
+});
 
 //create an all data endpoint to retreive all the data
 app.get('/alldata', async (req,res)=>{
@@ -198,6 +231,8 @@ app.get('/alldata', async (req,res)=>{
                 answer: a.doc.answer,
                 allImages: a.doc.allImages||[],
                 date: a.doc.date,
+                likes: a.doc.likes,
+                dislikes: a.doc.dislikes,
                 replies: getAnswer(a.id)
 
             }))
@@ -217,12 +252,16 @@ app.get('/alldata', async (req,res)=>{
                     question: q.doc.question,
                     allImages:q.doc.allImages||[],
                     date: q.doc.date,
+                    likes: q.doc.likes,
+                    dislikes: q.doc.dislikes,
                     answers: answers.filter(ans=> ans.doc.parentId=== q.id).map( ans=> ({
                         id: ans.id,
                         author: ans.doc.author,
                         answer: ans.doc.answer,
                         allImages: ans.doc.allImages||[],
                         date: ans.doc.date,
+                        likes: ans.doc.likes,
+                        dislikes: ans.doc.dislikes,
                         replies: getAnswer(ans.id) //allow nested
                     }))
                 }))
@@ -260,6 +299,18 @@ app.get('/allusers', async (req,res)=>{
         return res.status(200).json({userDocs});
     }catch(error){
         console.error("Whoops couldnt get all the user documents",error);
+    }
+})
+
+app.delete('/deleteuser/:id', async (req,res)=>{
+    const {id}=req.params;
+    try{
+        const user = await userDB.get(id)
+        await userDB.destroy(id,user._rev);
+        res.status(200).json({success: true, message: "deleted user"})
+
+    }catch(error){
+        console.error("whoops could delete answer", error)
     }
 })
 

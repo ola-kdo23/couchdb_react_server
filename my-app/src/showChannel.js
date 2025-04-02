@@ -6,6 +6,7 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import Dropdown from '@mui/joy/Dropdown';
+import TextField from "@mui/material/TextField"
 import axios from "axios";
 
 function ShowChannels(){
@@ -17,7 +18,8 @@ function ShowChannels(){
     const param=new URLSearchParams(location.search);
     const username = param.get("user") || "None" ;
     const isadmin = param.get("admin")||"None";  //now we can use this to set up special button for the admin.
-    
+    const[search,setSearch]=useState("");
+    const [filteredChannels, setFilteredChannels] = useState([]);
 
     useEffect(() => {
         axios.get('http://0.0.0.0:3000/allusers')
@@ -25,13 +27,73 @@ function ShowChannels(){
                 setUsers(res.data.userDocs || []);
             })
             .catch(error => console.error("Error fetching data:", error));
+
+            axios
+            .get("http://0.0.0.0:3000/alldata")
+            .then((res) => {
+                setFilteredChannels(res.data.docs || []); // Initially set all channels
+            })
+            .catch((error) => console.error("Error fetching data:", error));
+
     }, []);
 
+    // Recursively search if searched string is in answers or nested replies
+    const handleRecursiveAnswerSearch = (answer, searchLower) => {
+        if (answer.answer.toLowerCase().includes(searchLower) || answer.author.toLowerCase().includes(searchLower)) {
+            return true;
+        }
+        if (answer.replies && answer.replies.length > 0) {
+            return answer.replies.some(reply => handleRecursiveAnswerSearch(reply, searchLower));
+        }
 
-    const handleAddQuestion = () => {
-      setUpdateList(!updateList);
+        return false;
     };
 
+    const handleSetSearch=(event)=>{
+        const searchval =event.target.value;
+        setSearch(searchval)
+
+        if(searchval.trim !== "") { //if the search bar isnt empty
+
+            //check if the searched string exists in any channel question or answer
+            axios.get("http://0.0.0.0:3000/alldata")
+            .then((res) => {
+                const filtered = res.data.docs.filter((channel) => {
+                    const searchLower = searchval.toLowerCase();
+
+                    // Check if channel topic or author matches
+                    if (channel.topic.toLowerCase().includes(searchLower)|| channel.author.toLowerCase().includes(searchLower)) {
+                        return true;
+                    }
+
+                    // Check if question's or their author's match
+                    const questionsMatch = channel.questions.some((question) =>
+                        question.question.toLowerCase().includes(searchLower)
+                    );
+                    const questionUserMatch =channel.questions.some((question) =>
+                        question.author.toLowerCase().includes(searchLower)
+                    );
+
+                    // Check if answers or their authors match...needs recursion becuase they have nested replies
+                    const answersMatch = channel.questions.some((question) =>
+                        question.answers.some((answer) =>
+                            handleRecursiveAnswerSearch(answer, searchLower)
+                        )
+                    );
+
+                    
+
+                    return questionsMatch || answersMatch || questionUserMatch;
+                });
+
+                setFilteredChannels(filtered);
+            })
+            .catch((error) => console.error("Error fetching data:", error));
+
+        }
+    }
+
+    //allows the admin to delete users
     const handleUserDeletion=(userid)=>{
         console.log(userid);
         axios.delete(`http://0.0.0.0:3000/deleteuser/${userid}`)
@@ -44,6 +106,12 @@ function ShowChannels(){
         })
         .catch(error => console.error("Error deleting data:", error))
     }
+
+    //handles adding questions into a channel
+    const handleAddQuestion = () => {
+        setUpdateList(!updateList);
+      };
+  
     return(
         
         <div>
@@ -62,8 +130,10 @@ function ShowChannels(){
                 </Dropdown>
                 : null}
             </div>
+            <TextField variant="outlined" fullWidth label="Search" onChange={handleSetSearch}/>
+            <p>{search}</p>
             <ChannelForm onAddChannel={handleAddQuestion} author={username} />
-            <AllChannels key={updateList} author={username} admin={isadmin}/>
+            <AllChannels key={updateList} author={username} admin={isadmin} channels={filteredChannels}/>
             
         </div>
         
