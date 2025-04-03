@@ -284,7 +284,7 @@ app.post('/appusers', async(req,res) =>{
     }
     //insert into the userdb
     try{
-        const doc= await userDB.insert({username,password});
+        const doc= await userDB.insert({username,password,numOfposts:0});  //set every users number of posts to be zero
         res.status(200).json({success: true, id: doc.id})
     }catch(error){
         console.log("whoops couldn't insert to database", error);
@@ -314,6 +314,54 @@ app.delete('/deleteuser/:id', async (req,res)=>{
     }
 })
 
+// update number of posts for user
+app.post('/updatenumposts/:id', async (req, res) => {
+    const { id } = req.params; //get the user's doc were updating
+    try {
+        const doc = await userDB.get(id);
+        let num = doc.numOfposts;
+        num+=1;
+        // Update the document with new counts
+        await userDB.insert({
+            ...doc,
+            numOfposts: doc.numOfposts+1
+        });
+        res.status(200).json({ success: true, numOfposts: num});
+    } catch (error) {
+        console.error("Error updating user's number of posts", error);
+    }
+});
+
+//get the user with the most and least number of posts
+app.get('/mostposts', async (req, res) => {
+    try {
+        const allUsers = await userDB.list({ include_docs: true });
+        const usersWithPosts = allUsers.rows.map(row => row.doc);
+        const mostPostsUser = usersWithPosts.reduce((max, user) => {
+            return user.numOfposts > max.numOfposts ? user : max;
+        });
+        res.status(200).json(mostPostsUser);
+    } catch (error) {
+        console.error("Error fetching users with most posts", error);
+    }
+});
+
+// Get the user with the least posts
+app.get('/leastposts', async (req, res) => {
+    try {
+        const allUsers = await userDB.list({ include_docs: true });
+        const usersWithPosts = allUsers.rows.map(row => row.doc);
+        const leastPostsUser = usersWithPosts.reduce((min, user) => {
+            return user.numOfposts < min.numOfposts ? user : min;
+        });
+        res.status(200).json(leastPostsUser);
+    } catch (error) {
+        console.error("Error fetching users with least posts", error);
+    }
+});
+
+
+//--------------------------------------------------------------------------------------------------------------------
 //open the port
 app.listen(PORT,HOST,()=>{
     console.log(`Server is running at http://${HOST}:${PORT}`);

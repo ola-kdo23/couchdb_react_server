@@ -20,7 +20,7 @@ function ShowChannels(){
     const isadmin = param.get("admin")||"None";  //now we can use this to set up special button for the admin.
     const[search,setSearch]=useState("");
     const [filteredChannels, setFilteredChannels] = useState([]);
-
+    
     useEffect(() => {
         axios.get('http://0.0.0.0:3000/allusers')
             .then(res => {
@@ -32,6 +32,7 @@ function ShowChannels(){
             .get("http://0.0.0.0:3000/alldata")
             .then((res) => {
                 setFilteredChannels(res.data.docs || []); // Initially set all channels
+                
             })
             .catch((error) => console.error("Error fetching data:", error));
 
@@ -92,10 +93,25 @@ function ShowChannels(){
 
         }
     }
-
+    //handle getting the user with the most and least posts
+    const handleMostPosts = () => {
+        axios.get('http://0.0.0.0:3000/mostposts')
+            .then(res => {
+                alert(`User with most posts: ${res.data.username} with ${res.data.numOfposts} posts`);
+            })
+            .catch(error => console.error("Error fetching most posts", error));
+    };
+    
+    const handleLeastPosts = () => {
+        axios.get('http://0.0.0.0:3000/leastposts')
+            .then(res => {
+                alert(`User with least posts: ${res.data.username} with ${res.data.numOfposts} posts`);
+            })
+            .catch(error => console.error("Error fetching least posts", error));
+    };
+    
     //allows the admin to delete users
     const handleUserDeletion=(userid)=>{
-        console.log(userid);
         axios.delete(`http://0.0.0.0:3000/deleteuser/${userid}`)
         .then(res=>{
             axios.get('http://0.0.0.0:3000/allusers')
@@ -131,7 +147,18 @@ function ShowChannels(){
                 : null}
             </div>
             <TextField variant="outlined" fullWidth label="Search" onChange={handleSetSearch}/>
-            <p>{search}</p>
+            <div>  {/*allows searching */}
+                <div>
+                <label>Who has the most posts? </label> <button className="Button" onClick={handleMostPosts}>Find out</button>
+                </div>
+                <br/>
+
+                <div>
+                <label>Who has the least posts?</label> <button className="Button" onClick={handleLeastPosts}>Find out</button>
+                </div>
+                <br/>
+
+            </div>
             <ChannelForm onAddChannel={handleAddQuestion} author={username} />
             <AllChannels key={updateList} author={username} admin={isadmin} channels={filteredChannels}/>
             

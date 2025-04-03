@@ -55,6 +55,7 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   border-color: #f200a9;
+  border-width: 0.5cap;
   margin-bottom: 20px;
   padding: 10px;
   background-color: #f9f9f9;
@@ -63,7 +64,8 @@
 .channel-questions{
   border: 1px solid #ccc;
   border-radius: 8px;
-  border-color: #db1212;
+  border-width: 0.5cap;
+  border-color: #f365e7;
   margin-bottom: 20px;
   padding: 10px;
   background-color: #f9f9f9;
@@ -73,7 +75,8 @@
 .channel-answers{
   border: 1px solid #ccc;
   border-radius: 8px;
-  border-color: #11e23e;
+  border-width: 0.5cap;
+  border-color: #f1b8e7;
   margin-bottom: 20px;
   padding: 10px;
   background-color: #f9f9f9;
